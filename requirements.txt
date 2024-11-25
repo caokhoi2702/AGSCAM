@@ -1,0 +1,14 @@
+torch 
+torchvision 
+numpy 
+tqdm 
+timm
+beautifulsoup4 
+einops 
+h5py 
+jupyter 
+matplotlib 
+openpyxl 
+Pillow 
+opencv-python 
+scipy
