@@ -58,7 +58,7 @@ class Evaluator:
         seed=777,
         img_size=224,
         threshold=0.5,
-        root_dir="../../input/ilsvrc/ILSVRC",
+        root_dir="/kaggle/input/ilsvrc/ILSVRC",
     ):
         self.img_size = img_size
         self.threshold = threshold
