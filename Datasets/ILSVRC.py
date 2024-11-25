@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 
 class ImageNetDataset_val(ImageFolder):
     def __init__(self, root_dir, transforms=None):
+        root_dir = "../" + root_dir
         self.img_dir = os.path.join(root_dir, "Data", "CLS-LOC", "val")
         self.annotation_dir = os.path.join(root_dir, "Annotations", "CLS-LOC", "val")
         self.classes = sorted(os.listdir(self.img_dir))
