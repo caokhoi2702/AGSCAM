@@ -89,34 +89,82 @@ class BetterAGCAM:
         mask = gradient * attn
 
         # aggregation of CAM of all heads and all layers and reshape the final CAM.
-        a_mask = Rearrange(
+        heatmaps = Rearrange(
             "b l hd z (h w)  -> b l hd z h w", h=self.width, w=self.width
         )(mask[:, :, :, 1:].unsqueeze(0))
-        tensor_heatmaps = a_mask[0]
-        tensor_heatmaps = tensor_heatmaps.reshape(144, 1, 14, 14)
-        tensor_heatmaps = transforms.Resize((224, 224))(tensor_heatmaps)
+        
+        for i in range(12):
+            for j in range(12):
+                
+                heatmap = heatmaps[0][i][j]
+                up_heatmap = heatmap.reshape(1, 1, 14, 14)
+                upsample = torch.nn.Upsample(224, mode = 'bilinear', align_corners=False)
+                up_heatmap = upsample(up_heatmap)
+                norm_heatmap = (up_heatmap - up_heatmap.min())/(up_heatmap.max()-up_heatmap.min())
+                up_heatmap.detach()
+                new_image = input_tensor * norm_heatmap
+                norm_heatmap.detach()
+                masked_output = self.model.__call__(new_image) 
+                conf = masked_output - output
+                conf = conf[0, prediction.item()].to(self.device) 
 
-        min_vals = tensor_heatmaps.amin(dim=(2, 3), keepdim=True)
-        max_vals = tensor_heatmaps.amax(dim=(2, 3), keepdim=True)
+                # Generate new heatap
+                sum_heatmap = torch.cat((sum_heatmap, conf.unsqueeze(0)), axis = 0)
+                
+                # title = "confidence: " + str(conf.item()) + ", prediction: " + str(torch.argmax(masked_output, dim =1 ))
+                # show_img = heatmap.reshape(1, 1, 14, 14)
+                # show_img = transforms.Resize((224, 224))(show_img[0])
+                # show_img = (show_img - show_img.min())/(show_img.max()-show_img.min())
+                # show_img = show_img.detach().cpu().numpy()
+                # show_img = np.transpose(show_img, (1, 2, 0))
 
-        tensor_heatmaps = (tensor_heatmaps - min_vals + 1e-7) / (
-            max_vals - min_vals + 1e-7
-        )
+                # axs[i, j].set_title(title)
+                # # Show heatmap 
+                # axs[i, j].imshow(show_img)
+                # # Show new_image
+                # # axs[i, j].imshow(np.transpose(new_image[0].detach().cpu().numpy(), (1, 2, 0)))
+                # axs[i, j].axis('off')
 
-        m = torch.mul(tensor_heatmaps, input_tensor)
-        with torch.no_grad():
-            output_mask = self.model.__call__(m)
+        # Calculate alpha using softmax to get the contribution of each heatmap
+        
+        sigmoid_alpha = torch.sigmoid(sum_heatmap)
+        sigmoid_alpha = sigmoid_alpha.unsqueeze(1).unsqueeze(2).repeat(1, 1, 196)
+        sigmoid_heatmap = sigmoid_alpha * heatmaps.reshape(12 * 12, 1, 196)
+        sigmoid_heatmap = torch.sum(sigmoid_heatmap, axis = 0)
 
-        agc_scores = output_mask[:, prediction.item()] - output[0, prediction.item()]
-        # print('score shape: ', agc_scores.shape)
-        agc_scores = torch.sigmoid(agc_scores).reshape(12, 12)
-        my_cam = (agc_scores.view(12, 12, 1, 1, 1) * a_mask[0]).sum(axis=(0, 1))
-        # my_cam = (agc_scores[:, :, None, None, None] * a_mask[0]).sum(axis=(0, 1))
+        # Converting final heatmap to display
+        # final_heatmap = torch.relu(final_heatmap)
+        
+        sigmoid_heatmap = sigmoid_heatmap.reshape(1, 1, 14, 14)
+        sigmoid_heatmap = transforms.Resize((224, 224))(sigmoid_heatmap[0])
+        sigmoid_heatmap = (sigmoid_heatmap - sigmoid_heatmap.min())/(sigmoid_heatmap.max()-sigmoid_heatmap.min())
+        sigmoid_heatmap = sigmoid_heatmap.detach().cpu().numpy()
+        sigmoid_heatmap = np.transpose(sigmoid_heatmap, (1, 2, 0))
+        # tensor_heatmaps = a_mask[0]
+        # tensor_heatmaps = tensor_heatmaps.reshape(144, 1, 14, 14)
+        # tensor_heatmaps = transforms.Resize((224, 224))(tensor_heatmaps)
 
-        # sigmoid_mask = torch.from_numpy(my_cam)
-        sigmoid_mask = my_cam.unsqueeze(0)
+        # min_vals = tensor_heatmaps.amin(dim=(2, 3), keepdim=True)
+        # max_vals = tensor_heatmaps.amax(dim=(2, 3), keepdim=True)
 
-        return prediction, sigmoid_mask
+        # tensor_heatmaps = (tensor_heatmaps - min_vals + 1e-7) / (
+        #     max_vals - min_vals + 1e-7
+        # )
+
+        # m = torch.mul(tensor_heatmaps, input_tensor)
+        # with torch.no_grad():
+        #     output_mask = self.model.__call__(m)
+
+        # agc_scores = output_mask[:, prediction.item()] - output[0, prediction.item()]
+        # # print('score shape: ', agc_scores.shape)
+        # agc_scores = torch.sigmoid(agc_scores).reshape(12, 12)
+        # my_cam = (agc_scores.view(12, 12, 1, 1, 1) * a_mask[0]).sum(axis=(0, 1))
+        # # my_cam = (agc_scores[:, :, None, None, None] * a_mask[0]).sum(axis=(0, 1))
+
+        # # sigmoid_mask = torch.from_numpy(my_cam)
+        # sigmoid_mask = my_cam.unsqueeze(0)
+
+        return prediction, sigmoid_heatmap
 
 
 class AGCAM:

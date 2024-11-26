@@ -3,7 +3,7 @@ from evaluator import Evaluator
 
 def main():
     evaluator = Evaluator()
-    evaluator.doEvaluate(method_name="AGCAM")
+    evaluator.doEvaluate(method_name="BetterAGCAM")
 
 
 if __name__ == "__main__":
