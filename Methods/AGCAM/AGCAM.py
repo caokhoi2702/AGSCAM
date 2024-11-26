@@ -116,7 +116,7 @@ class BetterAGCAM:
         sum_heatmap = torch.tensor(sum_heatmap, dtype=torch.float)
         sigmoid_alpha = torch.sigmoid(sum_heatmap)
         sigmoid_alpha = sigmoid_alpha.unsqueeze(1).unsqueeze(2).repeat(1, 1, 196)
-        sigmoid_heatmap = sigmoid_alpha * heatmaps.reshape(144, 1, 196)
+        sigmoid_heatmap = sigmoid_alpha * heatmaps.reshape(144, 1, 196).detach().cpu()
         sigmoid_heatmap = torch.sum(sigmoid_heatmap, axis = 0)
 
         
