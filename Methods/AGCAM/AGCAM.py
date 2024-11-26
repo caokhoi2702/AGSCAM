@@ -112,7 +112,8 @@ class BetterAGCAM:
                 sum_heatmap.append(sum_heatmap)
 
         # Calculate alpha using softmax to get the contribution of each heatmap
-        sum_heatmap = torch.tensor(sum_heatmap)
+        sum_heatmap = np.array(sum_heatmap, dtype=float)
+        sum_heatmap = torch.tensor(sum_heatmap, dtype=torch.float)
         sigmoid_alpha = torch.sigmoid(sum_heatmap)
         sigmoid_alpha = sigmoid_alpha.unsqueeze(1).unsqueeze(2).repeat(1, 1, 196)
         sigmoid_heatmap = sigmoid_alpha * heatmaps.reshape(144, 1, 196)
