@@ -102,7 +102,7 @@ class BetterAGCAM:
                 up_heatmap = heatmap.reshape(1, 1, 14, 14)
                 upsample = torch.nn.Upsample(224, mode = 'bilinear', align_corners=False)
                 up_heatmap = upsample(up_heatmap)
-                norm_heatmap = (up_heatmap - up_heatmap.min())/(up_heatmap.max()-up_heatmap.min())
+                norm_heatmap = (up_heatmap - up_heatmap.min())/(up_heatmap.max()-up_heatmap.min() + 0.00001)
                 new_image = input_tensor * norm_heatmap
                 masked_output = self.model.__call__(new_image) 
                 conf = masked_output - output
