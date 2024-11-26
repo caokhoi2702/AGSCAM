@@ -103,29 +103,13 @@ class BetterAGCAM:
                 upsample = torch.nn.Upsample(224, mode = 'bilinear', align_corners=False)
                 up_heatmap = upsample(up_heatmap)
                 norm_heatmap = (up_heatmap - up_heatmap.min())/(up_heatmap.max()-up_heatmap.min())
-                up_heatmap.detach()
                 new_image = input_tensor * norm_heatmap
-                norm_heatmap.detach()
                 masked_output = self.model.__call__(new_image) 
                 conf = masked_output - output
                 conf = conf[0, prediction.item()].to("cuda") 
 
                 # Generate new heatap
                 sum_heatmap = torch.cat((sum_heatmap, conf.unsqueeze(0)), axis = 0)
-                
-                # title = "confidence: " + str(conf.item()) + ", prediction: " + str(torch.argmax(masked_output, dim =1 ))
-                # show_img = heatmap.reshape(1, 1, 14, 14)
-                # show_img = transforms.Resize((224, 224))(show_img[0])
-                # show_img = (show_img - show_img.min())/(show_img.max()-show_img.min())
-                # show_img = show_img.detach().cpu().numpy()
-                # show_img = np.transpose(show_img, (1, 2, 0))
-
-                # axs[i, j].set_title(title)
-                # # Show heatmap 
-                # axs[i, j].imshow(show_img)
-                # # Show new_image
-                # # axs[i, j].imshow(np.transpose(new_image[0].detach().cpu().numpy(), (1, 2, 0)))
-                # axs[i, j].axis('off')
 
         # Calculate alpha using softmax to get the contribution of each heatmap
         
@@ -134,8 +118,6 @@ class BetterAGCAM:
         sigmoid_heatmap = sigmoid_alpha * heatmaps.reshape(12 * 12, 1, 196)
         sigmoid_heatmap = torch.sum(sigmoid_heatmap, axis = 0)
 
-        # Converting final heatmap to display
-        # final_heatmap = torch.relu(final_heatmap)
         
         sigmoid_heatmap = sigmoid_heatmap.reshape(1, 1, 14, 14)
         sigmoid_heatmap = transforms.Resize((224, 224))(sigmoid_heatmap[0])
