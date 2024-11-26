@@ -106,7 +106,7 @@ class BetterAGCAM:
                 norm_heatmap.detach()
                 masked_output = self.model.__call__(new_image) 
                 conf = masked_output - output
-                conf = conf[0, prediction.item()].to(self.device) 
+                conf = conf[0, prediction.item()].to("cuda") 
 
                 # Generate new heatap
                 sum_heatmap = torch.cat((sum_heatmap, conf.unsqueeze(0)), axis = 0)
