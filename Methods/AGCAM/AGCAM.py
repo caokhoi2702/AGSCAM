@@ -93,6 +93,8 @@ class BetterAGCAM:
             "b l hd z (h w)  -> b l hd z h w", h=self.width, w=self.width
         )(mask[:, :, :, 1:].unsqueeze(0))
         
+        sum_heatmap = torch.tensor([]).to("cuda")
+        
         for i in range(12):
             for j in range(12):
                 
