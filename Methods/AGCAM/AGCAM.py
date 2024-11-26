@@ -109,7 +109,7 @@ class BetterAGCAM:
                 conf = conf[0, prediction.item()].detach().cpu()
 
                 # Generate new heatap
-                sum_heatmap.append(sum_heatmap)
+                sum_heatmap.append(conf.unsqueeze(0))
 
         # Calculate alpha using softmax to get the contribution of each heatmap
         sum_heatmap = np.array(sum_heatmap, dtype=float)
