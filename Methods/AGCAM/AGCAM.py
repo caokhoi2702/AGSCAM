@@ -109,7 +109,7 @@ class BetterAGCAM:
                 conf = conf[0, prediction.item()]
 
                 # Generate new heatap
-                sum_heatmap = torch.cat((sum_heatmap, conf.unsqueeze(0)), axis = 0)
+                sum_heatmap = torch.cat((sum_heatmap, conf.unsqueeze(0).to("cuda")), axis = 0)
 
         # Calculate alpha using softmax to get the contribution of each heatmap
         
