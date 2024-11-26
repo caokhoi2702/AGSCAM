@@ -93,7 +93,7 @@ class BetterAGCAM:
             "b l hd z (h w)  -> b l hd z h w", h=self.width, w=self.width
         )(mask[:, :, :, 1:].unsqueeze(0))
         
-        sum_heatmap = torch.tensor([]).to("cuda")
+        sum_heatmap = []
         
         for i in range(12):
             for j in range(12):
@@ -106,13 +106,13 @@ class BetterAGCAM:
                 new_image = input_tensor * norm_heatmap
                 masked_output = self.model.__call__(new_image) 
                 conf = masked_output - output
-                conf = conf[0, prediction.item()]
+                conf = conf[0, prediction.item()].detach().cpu()
 
                 # Generate new heatap
-                sum_heatmap = torch.cat((sum_heatmap, conf.unsqueeze(0)), axis = 0)
+                sum_heatmap.append(sum_heatmap)
 
         # Calculate alpha using softmax to get the contribution of each heatmap
-        
+        sum_heatmap = torch.from_numpy(sum_heatmap)
         sigmoid_alpha = torch.sigmoid(sum_heatmap)
         sigmoid_alpha = sigmoid_alpha.unsqueeze(1).unsqueeze(2).repeat(1, 1, 196)
         sigmoid_heatmap = sigmoid_alpha * heatmaps.reshape(12 * 12, 1, 196)
