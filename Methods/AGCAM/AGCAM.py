@@ -119,12 +119,7 @@ class BetterAGCAM:
         sigmoid_heatmap = sigmoid_alpha * heatmaps.reshape(144, 1, 196).detach().cpu()
         sigmoid_heatmap = torch.sum(sigmoid_heatmap, axis = 0)
 
-        
-        sigmoid_heatmap = sigmoid_heatmap.reshape(1, 1, 14, 14)
-        sigmoid_heatmap = transforms.Resize((224, 224))(sigmoid_heatmap[0])
-        sigmoid_heatmap = (sigmoid_heatmap - sigmoid_heatmap.min())/(sigmoid_heatmap.max()-sigmoid_heatmap.min())
-        sigmoid_heatmap = sigmoid_heatmap.detach().cpu().numpy()
-        sigmoid_heatmap = np.transpose(sigmoid_heatmap, (1, 2, 0))
+
         # tensor_heatmaps = a_mask[0]
         # tensor_heatmaps = tensor_heatmaps.reshape(144, 1, 14, 14)
         # tensor_heatmaps = transforms.Resize((224, 224))(tensor_heatmaps)
